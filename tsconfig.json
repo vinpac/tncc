@@ -15,6 +15,11 @@
     "sourceMap": true,
     "skipLibCheck": true,
     "baseUrl": "./fixture",
+    "paths": {
+      "~/components/*": ["components/*"],
+      "~/lib/*": ["lib/*"],
+      "~/core/*": ["core/*"]
+    },
     "typeRoots": ["./node_modules/@types"],
     "lib": ["dom", "es2015", "es2016"]
   },

@@ -14,7 +14,7 @@ const {
   run: runMode = false,
   verbose = false,
   env = process.env.NODE_ENV || 'development',
-  tsConfig = 'tsconfig.json',
+  tsConfigFilepath = 'tsconfig.json',
 } = new commander.Command(pkg.name)
   .version(pkg.version)
   .option('--env <env>', 'environment')
@@ -26,10 +26,10 @@ const {
   .option('--run', 'run compiled output', false)
   .on('--help', () => {
     /* eslint-disable no-console */
-    console.log()
-    console.log('    If you have any problems, do not hesitate to file an issue:')
-    console.log(`      ${chalk.cyan(`https://github.com/vinpac/${pkg.name}/issues/new`)}`)
-    console.log()
+    console.info()
+    console.info('    If you have any problems, do not hesitate to file an issue:')
+    console.info(`      ${chalk.cyan(`https://github.com/vinpac/${pkg.name}/issues/new`)}`)
+    console.info()
     /* eslint-enable no-console */
   })
   .parse(process.argv)
@@ -56,7 +56,29 @@ if (output.endsWith('/')) {
   outputFile = output.substr(slashIndex + 1)
 }
 
-const alias = {}
+const tsConfig = require(path.resolve(tsConfigFilepath))
+let alias = {}
+
+try {
+  Object.keys(tsConfig.compilerOptions.paths).forEach(key => {
+    let aliasKey = key
+    if (aliasKey.endsWith('/*')) {
+      aliasKey = aliasKey.substr(0, aliasKey.length - 2)
+    } else {
+      aliasKey += '$'
+    }
+
+    tsConfig.compilerOptions.paths[key].forEach(target => {
+      alias[aliasKey] = path.resolve(
+        target.endsWith('/*') ? target.substr(0, target.length - 2) : target,
+      )
+    })
+  })
+} catch (error) {
+  console.info(error)
+  // ...
+}
+
 const compiler = webpack({
   target: 'node',
   mode: env,
@@ -77,7 +99,7 @@ const compiler = webpack({
         exclude: /^node_modules/,
         loader: 'ts-loader',
         options: {
-          configFile: path.resolve(tsConfig),
+          configFile: path.resolve(tsConfigFilepath),
         },
       },
     ],
@@ -100,7 +122,7 @@ const compiler = webpack({
 
 let child
 const onChildExit = () => {
-  console.log(chalk.red(`${chalk.black.bgRed(' DONE ')} Process finished`))
+  console.info(chalk.red(`${chalk.black.bgRed(' DONE ')} Process finished`))
 }
 
 const run = () => {
@@ -127,14 +149,14 @@ const onCompile = (error, stats) => {
   )
 
   if (error) {
-    console.log(failedMessage)
+    console.info(failedMessage)
     console.error(error)
     return
   }
 
   if (stats.hasErrors()) {
-    console.log(failedMessage)
-    console.log(
+    console.info(failedMessage)
+    console.info(
       stats.toString({
         assets: verbose,
         builtAt: verbose,
@@ -155,7 +177,7 @@ const onCompile = (error, stats) => {
   }
 
   if (runMode) {
-    console.log(
+    console.info(
       chalk.green(
         `${chalk.bgGreen.black(' DONE ')} Successfully compiled server in ${stats.endTime -
           stats.startTime}ms`,
