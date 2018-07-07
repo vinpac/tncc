@@ -1,6 +1,6 @@
 {
   "name": "compile-typescript-cli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Vinicius Pacheco Furtado <vin175pacheco@gmail.com>",
   "description": "Compile a typescript file with webpack",
   "main": "dist/index.js",
@@ -24,11 +24,11 @@
     "prepublish": "npm run transpile"
   },
   "dependencies": {
+    "awesome-typescript-loader": "^5.2.0",
     "chalk": "^2.4.1",
     "clear-console": "^1.1.0",
     "commander": "^2.16.0",
     "source-map-support": "^0.5.6",
-    "ts-loader": "^4.4.2",
     "webpack": "^4.14.0",
     "webpack-node-externals": "^1.7.2"
   },

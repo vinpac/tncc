@@ -5,6 +5,7 @@ import webpack from 'webpack'
 import nodeExternals from 'webpack-node-externals'
 import { spawn } from 'child_process'
 import clearConsole from 'clear-console'
+import { CheckerPlugin } from 'awesome-typescript-loader'
 import pkg from '../package.json'
 
 const {
@@ -97,9 +98,12 @@ const compiler = webpack({
       {
         test: /\.tsx?$/,
         exclude: /^node_modules/,
-        loader: 'ts-loader',
+        loader: 'awesome-typescript-loader',
         options: {
-          configFile: path.resolve(tsConfigFilepath),
+          silent: true,
+          useCache: true,
+          cacheDirectory: '.cache',
+          configFileName: path.resolve(tsConfigFilepath),
         },
       },
     ],
@@ -112,6 +116,7 @@ const compiler = webpack({
       raw: true,
       entryOnly: false,
     }),
+    new CheckerPlugin(),
   ],
   externals: [nodeExternals()],
   resolve: {
