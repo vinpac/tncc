@@ -1,6 +1,6 @@
 {
   "name": "compile-typescript-cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "author": "Vinicius Pacheco Furtado <vin175pacheco@gmail.com>",
   "description": "Compile a typescript file with webpack",
   "main": "dist/index.js",
