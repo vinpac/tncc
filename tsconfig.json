@@ -1,27 +1,8 @@
 {
-  "compileOnSave": false,
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "esnext",
     "module": "commonjs",
-    "outDir": "tmp/",
-    "jsx": "preserve",
-    "allowJs": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "removeComments": false,
-    "preserveConstEnums": true,
-    "sourceMap": true,
-    "skipLibCheck": true,
-    "baseUrl": "./fixture",
-    "paths": {
-      "~/components/*": ["components/*"],
-      "~/lib/*": ["lib/*"],
-      "~/core/*": ["core/*"]
-    },
-    "typeRoots": ["./node_modules/@types"],
-    "lib": ["dom", "es2015", "es2016"]
+    "outDir": "src/.next/production-server/"
   },
-  "include": ["fixture/**/*.ts"]
+  "include": ["fixture"]
 }

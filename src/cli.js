@@ -5,7 +5,7 @@ import webpack from 'webpack'
 import nodeExternals from 'webpack-node-externals'
 import { spawn } from 'child_process'
 import clearConsole from 'clear-console'
-import { CheckerPlugin } from 'awesome-typescript-loader'
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
 import pkg from '../package.json'
 
 const {
@@ -57,7 +57,22 @@ if (output.endsWith('/')) {
   outputFile = output.substr(slashIndex + 1)
 }
 
-const tsConfig = require(path.resolve(tsConfigFilepath))
+function loadTsConfig(filepath) {
+  let json = require(path.resolve(filepath))
+
+  if (json.extends) {
+    const baseJson = loadTsConfig(json.extends)
+    json = Object.assign({}, baseJson, json)
+
+    if (baseJson.compilerOptions) {
+      json.compilerOptions = Object.assign({}, baseJson.compilerOptions, json.compilerOptions)
+    }
+  }
+
+  return json
+}
+
+const tsConfig = loadTsConfig(tsConfigFilepath)
 let alias = {}
 
 try {
@@ -71,6 +86,7 @@ try {
 
     tsConfig.compilerOptions.paths[key].forEach(target => {
       alias[aliasKey] = path.resolve(
+        tsConfig.compilerOptions.baseUrl || '',
         target.endsWith('/*') ? target.substr(0, target.length - 2) : target,
       )
     })
@@ -98,17 +114,18 @@ const compiler = webpack({
       {
         test: /\.tsx?$/,
         exclude: /^node_modules/,
-        loader: 'awesome-typescript-loader',
+        loader: 'ts-loader',
         options: {
           silent: true,
-          useCache: true,
-          cacheDirectory: '.cache',
-          configFileName: path.resolve(tsConfigFilepath),
+          // disable type checker - we will use it in fork plugin
+          transpileOnly: true,
+          configFile: path.resolve(tsConfigFilepath),
         },
       },
     ],
   },
   plugins: [
+    new ForkTsCheckerWebpackPlugin(),
     // Adds a banner to the top of each generated chunk
     // https://webpack.js.org/plugins/banner-plugin/
     new webpack.BannerPlugin({
@@ -116,13 +133,40 @@ const compiler = webpack({
       raw: true,
       entryOnly: false,
     }),
-    new CheckerPlugin(),
   ],
+  bail: true,
   externals: [nodeExternals()],
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
     alias,
   },
+})
+
+compiler.hooks.forkTsCheckerDone.tap('should', (diagnostics, lints, elapsed) => {
+  const elapsedTime = Math.round(elapsed / 1000000)
+
+  if (watchMode) {
+    clearConsole()
+  }
+
+  if (diagnostics.length) {
+    console.info(
+      chalk.red(`${chalk.bgRed.black(' FAIL ')} Compilation failed after ${elapsedTime}ms\n`),
+    )
+    return
+  }
+
+  if (runMode) {
+    setTimeout(() => {
+      console.info(
+        chalk.green(
+          `${chalk.bgGreen.black(' DONE ')} Successfully compiled server in ${elapsedTime}ms`,
+        ),
+      )
+
+      run()
+    }, 1)
+  }
 })
 
 let child
@@ -145,12 +189,10 @@ const run = () => {
 }
 
 const onCompile = (error, stats) => {
-  if (watchMode) {
-    clearConsole()
-  }
-
   const failedMessage = chalk.red(
-    `${chalk.bgRed.black(' FAIL ')} Compilation failed after ${stats.endTime - stats.startTime}ms`,
+    `${chalk.bgRed.black(' FAIL ')} Compilation failed${
+      stats ? ` after ${stats.endTime - stats.startTime}ms` : ''
+    }`,
   )
 
   if (error) {
@@ -178,18 +220,6 @@ const onCompile = (error, stats) => {
         version: verbose,
       }),
     )
-    return
-  }
-
-  if (runMode) {
-    console.info(
-      chalk.green(
-        `${chalk.bgGreen.black(' DONE ')} Successfully compiled server in ${stats.endTime -
-          stats.startTime}ms`,
-      ),
-    )
-
-    run()
   }
 }
 
