@@ -1,1 +1,3 @@
-export const hey: string = 'qwe'
+export const hey: string = 'qwqweqwewqweqweqweqwewq'
+
+console.log(hey)

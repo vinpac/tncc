@@ -1,6 +1,6 @@
 {
-  "name": "compile-typescript-cli",
-  "version": "0.0.7",
+  "name": "tncc",
+  "version": "1.0.0",
   "author": "Vinicius Pacheco Furtado <vin175pacheco@gmail.com>",
   "description": "Compile a typescript file with webpack",
   "main": "dist/index.js",
@@ -9,17 +9,16 @@
     "bin"
   ],
   "bin": {
-    "compile-typescript": "./bin/compile-typescript"
+    "tncc": "./bin/tncc"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:vinpac/redux-handy.git"
+    "url": "git@github.com:vinpac/tncc.git"
   },
   "license": "MIT",
   "scripts": {
     "lint": "$(npm bin)/eslint src",
-    "pretest": "$(npm bin)/eslint src",
-    "test": "node dist/cli.js -e fixture/source.ts -o tmp/",
+    "test": "node dist/cli.js fixture/source.ts -o tmp/",
     "transpile": "$(npm bin)/babel src -d dist",
     "prepublish": "npm run transpile"
   },
@@ -27,10 +26,11 @@
     "chalk": "^2.4.1",
     "clear-console": "^1.1.0",
     "commander": "^2.16.0",
-    "fork-ts-checker-webpack-plugin": "^0.4.2",
+    "fork-ts-checker-webpack-plugin": "^0.5.2",
     "source-map-support": "^0.5.6",
-    "ts-loader": "^4.4.2",
-    "webpack": "^4.14.0",
+    "ts-loader": "^5.3.3",
+    "tsconfig-paths-webpack-plugin": "^3.2.0",
+    "webpack": "^4.28.4",
     "webpack-node-externals": "^1.7.2"
   },
   "devDependencies": {

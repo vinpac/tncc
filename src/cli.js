@@ -6,36 +6,39 @@ import nodeExternals from 'webpack-node-externals'
 import { spawn } from 'child_process'
 import clearConsole from 'clear-console'
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin'
 import pkg from '../package.json'
 
+let entry = ''
 const {
-  entry,
   output,
-  watch: watchMode = false,
-  run: runMode = false,
   verbose = false,
-  env = process.env.NODE_ENV || 'development',
-  tsConfigFilepath = 'tsconfig.json',
+  exec: commandToExec,
+  release: isRelease,
+  watch: watchEnabled,
+  run: runEnabled,
+  tsConfigFilePath = 'tsconfig.json',
 } = new commander.Command(pkg.name)
   .version(pkg.version)
-  .option('--env <env>', 'environment')
-  .option('-e, --entry <entry-file>', 'entry file path')
+  .action(src => {
+    entry = src
+  })
   .option('-o, --output <output-file>', 'output file path')
   .option('-c, --ts-config <typescript-config-file>', 'tsconfig.json')
-  .option('--watch', 'watch mode', false)
-  .option('--verbose', 'verbose mode', false)
-  .option('--run', 'run compiled output', false)
+  .option('-w, --watch', 'watch mode', false)
+  .option('-v, --verbose', 'verbose mode', false)
+  .option('-r, --run', 'run compiled output', false)
+  .option('--release', 'build to production')
+  .option('-e, --exec <exec-command>', 'exec when compiled')
   .on('--help', () => {
-    /* eslint-disable no-console */
     console.info()
     console.info('    If you have any problems, do not hesitate to file an issue:')
     console.info(`      ${chalk.cyan(`https://github.com/vinpac/${pkg.name}/issues/new`)}`)
     console.info()
-    /* eslint-enable no-console */
   })
   .parse(process.argv)
 
-const dev = env !== 'production'
+const dev = !isRelease
 let outputDir
 let outputFile = 'index.js'
 
@@ -52,53 +55,13 @@ if (!output) {
 if (output.endsWith('/')) {
   outputDir = output
 } else {
-  const slashIndex = output.lastIndexOf('/')
-  outputDir = output.substr(0, slashIndex)
-  outputFile = output.substr(slashIndex + 1)
+  outputDir = path.dirname(output)
+  outputFile = path.basename(output)
 }
 
-function loadTsConfig(filepath) {
-  let json = require(path.resolve(filepath))
-
-  if (json.extends) {
-    const baseJson = loadTsConfig(json.extends)
-    json = Object.assign({}, baseJson, json)
-
-    if (baseJson.compilerOptions) {
-      json.compilerOptions = Object.assign({}, baseJson.compilerOptions, json.compilerOptions)
-    }
-  }
-
-  return json
-}
-
-const tsConfig = loadTsConfig(tsConfigFilepath)
-let alias = {}
-
-try {
-  Object.keys(tsConfig.compilerOptions.paths).forEach(key => {
-    let aliasKey = key
-    if (aliasKey.endsWith('/*')) {
-      aliasKey = aliasKey.substr(0, aliasKey.length - 2)
-    } else {
-      aliasKey += '$'
-    }
-
-    tsConfig.compilerOptions.paths[key].forEach(target => {
-      alias[aliasKey] = path.resolve(
-        tsConfig.compilerOptions.baseUrl || '',
-        target.endsWith('/*') ? target.substr(0, target.length - 2) : target,
-      )
-    })
-  })
-} catch (error) {
-  console.info(error)
-  // ...
-}
-
-const compiler = webpack({
+let webpackConfig = {
   target: 'node',
-  mode: env,
+  mode: isRelease ? 'production' : 'development',
   devtool: 'source-map',
   context: path.resolve(),
   entry: path.resolve(entry),
@@ -119,7 +82,7 @@ const compiler = webpack({
           silent: true,
           // disable type checker - we will use it in fork plugin
           transpileOnly: true,
-          configFile: path.resolve(tsConfigFilepath),
+          configFile: path.resolve(tsConfigFilePath),
         },
       },
     ],
@@ -138,62 +101,77 @@ const compiler = webpack({
   externals: [nodeExternals()],
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
-    alias,
+    plugins: [new TsconfigPathsPlugin({ configFile: path.resolve(tsConfigFilePath) })],
   },
-})
-
-compiler.hooks.forkTsCheckerDone.tap('should', (diagnostics, lints, elapsed) => {
-  const elapsedTime = Math.round(elapsed / 1000000)
-
-  if (watchMode) {
-    clearConsole()
-  }
-
-  if (diagnostics.length) {
-    console.info(
-      chalk.red(`${chalk.bgRed.black(' FAIL ')} Compilation failed after ${elapsedTime}ms\n`),
-    )
-    return
-  }
-
-  if (runMode) {
-    setTimeout(() => {
-      console.info(
-        chalk.green(
-          `${chalk.bgGreen.black(' DONE ')} Successfully compiled server in ${elapsedTime}ms`,
-        ),
-      )
-
-      run()
-    }, 1)
-  }
-})
-
-let child
-const onChildExit = () => {
-  console.info(chalk.red(`${chalk.black.bgRed(' DONE ')} Process finished`))
 }
 
-const run = () => {
-  if (child) {
-    child.removeListener('exit', onChildExit)
-    child.kill('SIGTERM')
+try {
+  const { webpack: webpackConfigOverrides } = require(path.resolve('tncc.config'))
+
+  webpackConfig = webpackConfigOverrides(webpackConfig, {
+    entry,
+    output,
+    watchEnabled,
+    runEnabled,
+    verbose,
+    dev,
+    tsConfigFilePath,
+  })
+} catch (error) {
+  // ...
+}
+
+const compiler = webpack(webpackConfig)
+
+let childs = []
+const onNodeChildExit = () => {
+  console.info(chalk.red('> Process finished'))
+}
+
+const onExecChildExit = () => {
+  console.info(chalk.red('> Exec process finished'))
+}
+
+const onDone = elapsed => {
+  console.info(chalk.green(`> Successfully compiled in ${elapsed}ms`))
+
+  if (runEnabled) {
+    const runChild = spawn('node', [path.join(outputDir, outputFile)], {
+      env: Object.assign({ NODE_ENV: isRelease ? 'production' : 'development' }, process.env),
+      silent: false,
+      stdio: 'inherit',
+    })
+    runChild.once('exit', onNodeChildExit)
+    childs.push(runChild)
   }
 
-  child = spawn('node', [path.join(outputDir, outputFile)], {
-    env: Object.assign({ NODE_ENV: env }, process.env),
-    silent: false,
-    stdio: 'inherit',
-  })
-  child.once('exit', onChildExit)
+  if (commandToExec) {
+    console.info(chalk.blue('> Running exec command'))
+    const [command, ...args] = commandToExec.split(' ')
+    const execChild = spawn(command, args, {
+      env: Object.assign({ NODE_ENV: isRelease ? 'production' : 'development' }, process.env),
+      silent: false,
+      stdio: 'inherit',
+    })
+    execChild.once('exit', onExecChildExit)
+    childs.push(execChild)
+  }
 }
 
 const onCompile = (error, stats) => {
   const failedMessage = chalk.red(
-    `${chalk.bgRed.black(' FAIL ')} Compilation failed${
-      stats ? ` after ${stats.endTime - stats.startTime}ms` : ''
-    }`,
+    `> Compilation failed${stats ? ` after ${stats.endTime - stats.startTime}ms` : ''}`,
   )
+
+  // Kill current childs
+  if (childs.length) {
+    childs = childs.filter(child => {
+      child.removeListener('exit', onNodeChildExit)
+      child.kill('SIGTERM')
+
+      return false
+    })
+  }
 
   if (error) {
     console.info(failedMessage)
@@ -220,10 +198,20 @@ const onCompile = (error, stats) => {
         version: verbose,
       }),
     )
+    return
+  }
+
+  if (!watchEnabled) {
+    onDone(stats.endTime - stats.startTime)
   }
 }
 
-if (watchMode) {
+compiler.hooks.forkTsCheckerDone.tap('should', (_, __, elapsed) => {
+  clearConsole()
+  setTimeout(() => onDone(Math.round(elapsed / 1000000)), 1)
+})
+
+if (watchEnabled) {
   compiler.watch({}, onCompile)
 } else {
   compiler.run(onCompile)

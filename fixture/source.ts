@@ -1,3 +1,3 @@
-const a: string = '123'
+export const hey: string = 'qweqwqweqwqweqwe'
 
-console.log(a)
+console.log('qwewqeqweqweqwlekqwek')
