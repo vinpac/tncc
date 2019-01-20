@@ -1,4 +1,4 @@
-# compile-typescript-cli
+# tncc
 Compile a typescript file with webpack.
 
 # Getting Started
@@ -6,17 +6,17 @@ Compile a typescript file with webpack.
 ## Installation
 
 ```bash
-$ npm install compile-typescript-cli
+$ npm install tncc
 ```
 
 or
 
 ```
-$ yarn add compile-typescript-cli
+$ yarn add tncc
 ```
 
 ## Usage
 
 ```shell
-$ compile-typescript --help
+$ tncc --help
 ```
