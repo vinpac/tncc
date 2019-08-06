@@ -1,4 +1,5 @@
 #!/usr/bin/env node
 'use strict'
 
+// tslint:disable-next-line:no-var-requires
 require(require('path').resolve(__dirname, '../dist/cli.js'))

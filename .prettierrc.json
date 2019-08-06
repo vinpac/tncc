@@ -1,7 +1,5 @@
 {
   "semi": false,
-  "printWidth": 100,
-  "parser": "babylon",
-  "singleQuote": true,
-  "trailingComma": "all"
+  "trailingComma": "all",
+  "singleQuote": true
 }

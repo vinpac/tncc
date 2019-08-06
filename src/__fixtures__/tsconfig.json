@@ -11,7 +11,10 @@
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "jsx": "preserve"
-  },
-  "include": ["src"]
+    "jsx": "preserve",
+    "baseUrl": "./",
+    "paths": {
+      "~/*": ["./*"]
+    }
+  }
 }
