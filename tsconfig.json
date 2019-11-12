@@ -13,5 +13,6 @@
     "resolveJsonModule": true,
     "jsx": "preserve"
   },
-  "include": ["src"]
+  "include": ["src", "tests"],
+  "exclude": ["test/__fixtures__"]
 }

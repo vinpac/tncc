@@ -1,13 +1,17 @@
 {
   "name": "tncc",
-  "version": "0.2",
+  "version": "0.3.0-beta.5",
   "main": "lib/index.js",
   "module": "es/index.js",
   "typings": "lib/index.d.ts",
   "files": [
     "es",
-    "lib"
+    "lib",
+    "bin"
   ],
+  "bin": {
+    "tncc": "./bin/tncc"
+  },
   "author": {
     "name": "Vinicius Pacheco Furtado",
     "email": "vin175pacheco@gmail.com"
@@ -15,9 +19,12 @@
   "license": "MIT",
   "homepage": "https://github.com/vinpac/tncc#readme",
   "dependencies": {
+    "@babel/runtime": "^7.7.2",
     "clear-console": "^1.1.0",
     "fork-ts-checker-webpack-plugin": "^1.4.3",
-    "isomorphic-fetch": "^2.2.1",
+    "mkdirp": "^0.5.1",
+    "nanoid": "^2.1.6",
+    "tmp": "^0.1.0",
     "ts-loader": "^6.0.4",
     "tsconfig-paths-webpack-plugin": "^3.2.0",
     "webpack": "^4.39.1",
@@ -29,32 +36,43 @@
   },
   "scripts": {
     "test": "jest",
-    "build:cjs": "rimraf lib && babel src --extensions '.ts' --extensions '.tsx' --ignore '**/__fixtures__' --ignore '**/__mocks__' --ignore '**/__tests__' --ignore '**/__testutils__' -d lib",
-    "build:es": "rimraf es && cross-env ES_MODULES=true babel src --extensions '.ts' --extensions '.tsx' --ignore '**/__tests__' --ignore '**/__testutils__' -d es",
+    "build:cjs": "rimraf lib && babel src --extensions '.ts' --extensions '.tsx' --ignore 'test' -d lib",
+    "build:es": "rimraf es && cross-env ES_MODULES=true babel src --extensions '.ts' --extensions '.tsx' --ignore 'test' -d es",
     "build:typings": "tsc -p tsconfig.typings.json",
     "build": "npm run build:cjs && npm run build:es && npm run build:typings",
     "format-check": "prettier --list-different \"**/*.{js,ts,tsx}\"",
     "format": "prettier --write \"**/*.{js,ts,tsx}\"",
-    "lint": "tslint --project . \"src/**/*.{ts,tsx}\"",
+    "lint": "eslint . --ext js,jsx,ts,tsx",
     "typings-check": "tsc --noEmit",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "tncc": "node lib/cli.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/core": "^7.4.5",
+    "@babel/plugin-transform-runtime": "^7.6.2",
     "@babel/preset-env": "^7.4.5",
-    "@babel/preset-react": "^7.0.0",
-    "@babel/preset-typescript": "^7.3.3",
+    "@babel/preset-react": "^7.7.0",
+    "@babel/preset-typescript": "^7.7.0",
     "@testing-library/react": "^8.0.1",
     "@types/commander": "^2.12.2",
     "@types/isomorphic-fetch": "^0.0.35",
     "@types/jest": "24.0.13",
+    "@types/mkdirp": "^0.5.2",
+    "@types/nanoid": "^2.1.0",
     "@types/node": "12.0.4",
     "@types/react": "16.8.19",
     "@types/react-dom": "16.8.4",
+    "@types/rimraf": "^2.0.3",
+    "@types/tmp": "^0.1.0",
     "@types/webpack": "^4.32.1",
     "@types/webpack-node-externals": "^1.6.3",
+    "@typescript-eslint/eslint-plugin": "^2.7.0",
+    "@typescript-eslint/parser": "^2.7.0",
+    "babel-loader": "^8.0.6",
     "cross-env": "^5.2.0",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
     "husky": "^2.3.0",
     "jest": "^24.8.0",
     "lint-staged": "^8.1.7",
@@ -64,15 +82,11 @@
     "react-dom": "^16.8.6",
     "react-hooks-testing-library": "^0.5.0",
     "react-test-renderer": "^16.8.6",
-    "tslint": "^5.17.0",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-react": "^4.0.0",
-    "tslint-react-hooks": "^2.1.0",
-    "typescript": "3.5.1"
+    "typescript": "^3.7.2"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "tsc --noEmit && lint-staged"
+      "pre-commit": "tsc --noEmit && yarn test && lint-staged"
     }
   },
   "lint-staged": {
@@ -81,7 +95,7 @@
       "git add"
     ],
     "**/*.{ts,tsx}": [
-      "tslint --fix --project .",
+      "eslint --fix",
       "prettier --write",
       "git add"
     ]
@@ -96,12 +110,18 @@
     ],
     "setupFilesAfterEnv": [],
     "testMatch": [
-      "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
+      "<rootDir>/test/**/*.{js,jsx,ts,tsx}",
       "<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
     ],
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": "<rootDir>/node_modules/babel-jest"
     },
+    "testPathIgnorePatterns": [
+      "<rootDir>/test/__fixtures__/"
+    ],
+    "watchPathIgnorePatterns": [
+      "<rootDir>/test/__fixtures__/dist/"
+    ],
     "modulePaths": [],
     "moduleFileExtensions": [
       "ts",

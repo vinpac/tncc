@@ -2,4 +2,4 @@
 'use strict'
 
 // tslint:disable-next-line:no-var-requires
-require(require('path').resolve(__dirname, '../dist/cli.js'))
+require(require('path').resolve(__dirname, '../lib/cli.js'))

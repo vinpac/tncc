@@ -1,8 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Compile should work: basics 1`] = `
-"require(\\"source-map-support\\").install();
-/******/ (function(modules) { // webpackBootstrap
+exports[`Compile should compile a file without problems: basics 1`] = `
+"/******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -85,29 +84,33 @@ exports[`Compile should work: basics 1`] = `
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = \\"./src/__fixtures__/basics.ts\\");
+/******/ 	return __webpack_require__(__webpack_require__.s = \\"./test/__fixtures__/basics.ts\\");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ \\"./src/__fixtures__/basics.ts\\":
-/*!************************************!*\\\\
-  !*** ./src/__fixtures__/basics.ts ***!
-  \\\\************************************/
+/***/ \\"./test/__fixtures__/basics.ts\\":
+/*!*************************************!*\\\\
+  !*** ./test/__fixtures__/basics.ts ***!
+  \\\\*************************************/
 /*! exports provided: foo */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 \\"use strict\\";
-eval(\\"__webpack_require__.r(__webpack_exports__);\\\\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \\\\\\"foo\\\\\\", function() { return foo; });\\\\nvar foo = 'foo';\\\\n// tslint:disable-next-line:no-console\\\\nconsole.log('Basics');\\\\n//# sourceURL=[module]\\\\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvX19maXh0dXJlc19fL2Jhc2ljcy50cy5qcyIsInNvdXJjZXMiOlsiL1VzZXJzL211cmRvY2svbGFiL29wZW4tc291cmNlL3RuY2Mvc3JjL19fZml4dHVyZXNfXy9iYXNpY3MudHMiXSwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IHZhciBmb28gPSAnZm9vJztcbi8vIHRzbGludDpkaXNhYmxlLW5leHQtbGluZTpuby1jb25zb2xlXG5jb25zb2xlLmxvZygnQmFzaWNzJyk7XG4iXSwibWFwcGluZ3MiOiJBQUFBO0FBQUE7QUFBQTtBQUNBO0FBQ0E7Iiwic291cmNlUm9vdCI6IiJ9\\\\n//# sourceURL=webpack-internal:///./src/__fixtures__/basics.ts\\\\n\\");
+eval(\\"__webpack_require__.r(__webpack_exports__);\\\\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \\\\\\"foo\\\\\\", function() { return foo; });\\\\nvar foo = 'foo';\\\\n// tslint:disable-next-line:no-console\\\\nconsole.log('Basics');\\\\n//# sourceURL=[module]\\\\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi90ZXN0L19fZml4dHVyZXNfXy9iYXNpY3MudHMuanMiLCJzb3VyY2VzIjpbIi9Vc2Vycy9tdXJkb2NrL2xhYi9vcGVuLXNvdXJjZS90bmNjL3Rlc3QvX19maXh0dXJlc19fL2Jhc2ljcy50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgdmFyIGZvbyA9ICdmb28nO1xuLy8gdHNsaW50OmRpc2FibGUtbmV4dC1saW5lOm5vLWNvbnNvbGVcbmNvbnNvbGUubG9nKCdCYXNpY3MnKTtcbiJdLCJtYXBwaW5ncyI6IkFBQUE7QUFBQTtBQUFBO0FBQ0E7QUFDQTsiLCJzb3VyY2VSb290IjoiIn0=\\\\n//# sourceURL=webpack-internal:///./test/__fixtures__/basics.ts\\\\n\\");
 
 /***/ })
 
 /******/ });"
 `;
 
-exports[`Compile should work: paths 1`] = `
-"require(\\"source-map-support\\").install();
-/******/ (function(modules) { // webpackBootstrap
+exports[`Compile should throw an error if the entry file doesn't compile 1`] = `
+"[90m[tsl] [39m[1m[31mERROR[39m[22m[1m[31m in [39m[22m[1m[36m/Users/murdock/lab/open-source/tncc/test/__fixtures__/broken-compilation.ts(7,13)[39m[22m
+[1m[31m      TS1005: ';' expected.[39m[22m"
+`;
+
+exports[`Compile should use detect baseUrl and add TsconfigPathsPlugin: paths 1`] = `
+"/******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -190,32 +193,32 @@ exports[`Compile should work: paths 1`] = `
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = \\"./src/__fixtures__/paths.ts\\");
+/******/ 	return __webpack_require__(__webpack_require__.s = \\"./test/__fixtures__/paths.ts\\");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ \\"./src/__fixtures__/basics.ts\\":
-/*!************************************!*\\\\
-  !*** ./src/__fixtures__/basics.ts ***!
-  \\\\************************************/
+/***/ \\"./test/__fixtures__/basics.ts\\":
+/*!*************************************!*\\\\
+  !*** ./test/__fixtures__/basics.ts ***!
+  \\\\*************************************/
 /*! exports provided: foo */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 \\"use strict\\";
-eval(\\"__webpack_require__.r(__webpack_exports__);\\\\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \\\\\\"foo\\\\\\", function() { return foo; });\\\\nvar foo = 'foo';\\\\n// tslint:disable-next-line:no-console\\\\nconsole.log('Basics');\\\\n//# sourceURL=[module]\\\\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvX19maXh0dXJlc19fL2Jhc2ljcy50cy5qcyIsInNvdXJjZXMiOlsiL1VzZXJzL211cmRvY2svbGFiL29wZW4tc291cmNlL3RuY2Mvc3JjL19fZml4dHVyZXNfXy9iYXNpY3MudHMiXSwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IHZhciBmb28gPSAnZm9vJztcbi8vIHRzbGludDpkaXNhYmxlLW5leHQtbGluZTpuby1jb25zb2xlXG5jb25zb2xlLmxvZygnQmFzaWNzJyk7XG4iXSwibWFwcGluZ3MiOiJBQUFBO0FBQUE7QUFBQTtBQUNBO0FBQ0E7Iiwic291cmNlUm9vdCI6IiJ9\\\\n//# sourceURL=webpack-internal:///./src/__fixtures__/basics.ts\\\\n\\");
+eval(\\"__webpack_require__.r(__webpack_exports__);\\\\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \\\\\\"foo\\\\\\", function() { return foo; });\\\\nvar foo = 'foo';\\\\n// tslint:disable-next-line:no-console\\\\nconsole.log('Basics');\\\\n//# sourceURL=[module]\\\\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi90ZXN0L19fZml4dHVyZXNfXy9iYXNpY3MudHMuanMiLCJzb3VyY2VzIjpbIi9Vc2Vycy9tdXJkb2NrL2xhYi9vcGVuLXNvdXJjZS90bmNjL3Rlc3QvX19maXh0dXJlc19fL2Jhc2ljcy50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgdmFyIGZvbyA9ICdmb28nO1xuLy8gdHNsaW50OmRpc2FibGUtbmV4dC1saW5lOm5vLWNvbnNvbGVcbmNvbnNvbGUubG9nKCdCYXNpY3MnKTtcbiJdLCJtYXBwaW5ncyI6IkFBQUE7QUFBQTtBQUFBO0FBQ0E7QUFDQTsiLCJzb3VyY2VSb290IjoiIn0=\\\\n//# sourceURL=webpack-internal:///./test/__fixtures__/basics.ts\\\\n\\");
 
 /***/ }),
 
-/***/ \\"./src/__fixtures__/paths.ts\\":
-/*!***********************************!*\\\\
-  !*** ./src/__fixtures__/paths.ts ***!
-  \\\\***********************************/
+/***/ \\"./test/__fixtures__/paths.ts\\":
+/*!************************************!*\\\\
+  !*** ./test/__fixtures__/paths.ts ***!
+  \\\\************************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 \\"use strict\\";
-eval(\\"__webpack_require__.r(__webpack_exports__);\\\\n/* harmony import */ var _basics__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ~/basics */ \\\\\\"./src/__fixtures__/basics.ts\\\\\\");\\\\n// @ts-ignore\\\\n\\\\n// tslint:disable-next-line:no-console\\\\nconsole.log('foo = ', _basics__WEBPACK_IMPORTED_MODULE_0__[\\\\\\"foo\\\\\\"]);\\\\n//# sourceURL=[module]\\\\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9zcmMvX19maXh0dXJlc19fL3BhdGhzLnRzLmpzIiwic291cmNlcyI6WyIvVXNlcnMvbXVyZG9jay9sYWIvb3Blbi1zb3VyY2UvdG5jYy9zcmMvX19maXh0dXJlc19fL3BhdGhzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8vIEB0cy1pZ25vcmVcbmltcG9ydCB7IGZvbyB9IGZyb20gJ34vYmFzaWNzJztcbi8vIHRzbGludDpkaXNhYmxlLW5leHQtbGluZTpuby1jb25zb2xlXG5jb25zb2xlLmxvZygnZm9vID0gJywgZm9vKTtcbiJdLCJtYXBwaW5ncyI6IkFBQUE7QUFBQTtBQUFBO0FBQ0E7QUFDQTtBQUNBOyIsInNvdXJjZVJvb3QiOiIifQ==\\\\n//# sourceURL=webpack-internal:///./src/__fixtures__/paths.ts\\\\n\\");
+eval(\\"__webpack_require__.r(__webpack_exports__);\\\\n/* harmony import */ var _basics__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ~/basics */ \\\\\\"./test/__fixtures__/basics.ts\\\\\\");\\\\n// @ts-ignore\\\\n\\\\n// tslint:disable-next-line:no-console\\\\nconsole.log('foo = ', _basics__WEBPACK_IMPORTED_MODULE_0__[\\\\\\"foo\\\\\\"]);\\\\n//# sourceURL=[module]\\\\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi90ZXN0L19fZml4dHVyZXNfXy9wYXRocy50cy5qcyIsInNvdXJjZXMiOlsiL1VzZXJzL211cmRvY2svbGFiL29wZW4tc291cmNlL3RuY2MvdGVzdC9fX2ZpeHR1cmVzX18vcGF0aHMudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLy8gQHRzLWlnbm9yZVxuaW1wb3J0IHsgZm9vIH0gZnJvbSAnfi9iYXNpY3MnO1xuLy8gdHNsaW50OmRpc2FibGUtbmV4dC1saW5lOm5vLWNvbnNvbGVcbmNvbnNvbGUubG9nKCdmb28gPSAnLCBmb28pO1xuIl0sIm1hcHBpbmdzIjoiQUFBQTtBQUFBO0FBQUE7QUFDQTtBQUNBO0FBQ0E7Iiwic291cmNlUm9vdCI6IiJ9\\\\n//# sourceURL=webpack-internal:///./test/__fixtures__/paths.ts\\\\n\\");
 
 /***/ })
 

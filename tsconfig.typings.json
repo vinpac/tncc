@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["**/__tests__/**", "**/__mocks__/**", "**/__testutils__/**"],
+  "exclude": ["test/**"],
   "compilerOptions": {
     "declaration": true,
     "declarationDir": "lib",

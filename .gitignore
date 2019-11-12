@@ -25,4 +25,6 @@ yarn-error.log*
 # ouput
 /es
 /lib
-/src/__tests__/fixtures/dist
+/test/fixtures/dist
+dist
+.tncc

@@ -1,82 +1,135 @@
 import chalk from 'chalk'
 import { ChildProcess, spawn } from 'child_process'
 import clearConsole from 'clear-console'
+import * as fs from 'fs'
+import mkdirp from 'mkdirp'
 import * as path from 'path'
+import tmp from 'tmp'
 import webpack from 'webpack'
 import createWebpackConfig from './create-webpack-config'
 
 export interface CompileOptions {
+  configPath?: string
   entry: string
-  output: string
+  output?: string
   verbose?: boolean
   execCommand?: string
   dev: boolean
   watch?: boolean
-  run?: boolean
+  run?: boolean | ((child: ChildProcess) => void)
   checkTypes?: boolean
   quiet?: boolean
-  configPath: string
-  onCompile?: () => any
+  silent?: boolean
+  tsConfigPath: string
+  onCompile?: (error?: Error) => any
 }
 
 export default function compile(options: CompileOptions) {
-  const webpackConfig = createWebpackConfig(options)
+  const defaultConfigPath = path.resolve('tncc.config.js')
+  const configPath = options.configPath || defaultConfigPath
+  const silent = options.silent
+  const quiet = options.quiet || silent
 
-  let outputDir: string | undefined
-  let outputFile = 'index.js'
-
-  if (options.output.endsWith('/')) {
-    outputDir = options.output
-  } else {
-    outputDir = path.dirname(options.output)
-    outputFile = path.basename(options.output)
+  let tsconfig
+  try {
+    tsconfig = require(path.resolve(options.tsConfigPath))
+  } catch (error) {
+    throw new Error(
+      `Unable to find a valid configuration JSON for typescript at '${options.tsConfigPath}'`,
+    )
   }
 
   if (!options.entry) {
     throw new Error("'entry' is a required parameter")
   }
 
-  if (!options.output) {
-    throw new Error("'output' is a required parameter")
+  const output = options.output
+    ? path.resolve(options.output)
+    : tmp.fileSync().name
+
+  let outputDir: string | undefined
+  let outputFile = 'index.js'
+
+  if (output.endsWith('/')) {
+    outputDir = output
+  } else {
+    outputDir = path.dirname(output)
+    outputFile = path.basename(output)
+  }
+
+  mkdirp.sync(outputDir)
+
+  let webpackConfig = createWebpackConfig(
+    {
+      ...options,
+      outputDir,
+      outputFile,
+      useExternals: Boolean(options.output),
+    },
+    tsconfig,
+  )
+  if (configPath) {
+    let configFileExists = false
+    try {
+      configFileExists = Boolean(fs.statSync(configPath))
+    } catch (error) {
+      if (configPath !== defaultConfigPath) {
+        throw error
+      }
+    }
+
+    if (configFileExists) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const tnccConfig = require(configPath)
+      if (tnccConfig.webpack) {
+        webpackConfig = tnccConfig.webpack(webpackConfig, options)
+      }
+    }
   }
 
   const compiler = webpack(webpackConfig)
   let childProcesses: ChildProcess[] = []
 
   const onChildNodeProcessExit = () => {
-    console.info(chalk.red('> Process finished'))
+    if (!quiet) {
+      console.info(chalk.red('> Process finished'))
+    }
   }
 
   const onFinish = (elapsedTime: number) => {
-    console.info(chalk.green(`> Successfully compiled in ${elapsedTime}ms`))
+    if (!quiet) {
+      clearConsole()
+      console.info(chalk.green(`> Successfully compiled in ${elapsedTime}ms`))
+    }
 
-    if (options.run) {
-      const runChild = spawn('node', [path.join(outputDir!, outputFile)], {
+    if (options.onCompile) {
+      options.onCompile()
+    }
+
+    if (options.run || !options.output) {
+      const isFn = typeof options.run === 'function'
+      const nodeChild = spawn('node', [path.join(outputDir!, outputFile)], {
         env: Object.assign(
           { NODE_ENV: options.dev ? 'development' : 'production' },
           process.env,
         ),
-        stdio: options.quiet ? 'ignore' : 'inherit',
+        stdio: isFn ? undefined : silent ? 'ignore' : 'inherit',
       })
-      runChild.once('exit', () => {
+      nodeChild.once('exit', () => {
         childProcesses = childProcesses.filter(
-          childProcess => childProcess !== runChild,
+          childProcess => childProcess !== nodeChild,
         )
-        runChild.removeListener('exit', onChildNodeProcessExit)
-        runChild.kill('SIGTERM')
+        nodeChild.removeListener('exit', onChildNodeProcessExit)
+        nodeChild.kill('SIGTERM')
 
         onChildNodeProcessExit()
-
-        if (
-          childProcesses.length === 0 &&
-          !options.watch &&
-          options.onCompile
-        ) {
-          options.onCompile()
-        }
       })
 
-      childProcesses.push(runChild)
+      if (isFn) {
+        ;(options.run as any)(nodeChild)
+      }
+
+      childProcesses.push(nodeChild)
     }
 
     if (options.execCommand) {
@@ -87,19 +140,10 @@ export default function compile(options: CompileOptions) {
           { NODE_ENV: options.dev ? 'development' : 'production' },
           process.env,
         ),
-        stdio: options.quiet ? 'ignore' : 'inherit',
+        stdio: quiet ? 'ignore' : 'inherit',
       })
       execChild.once('exit', onChildNodeProcessExit)
       childProcesses.push(execChild)
-    }
-
-    if (
-      !options.run &&
-      !options.execCommand &&
-      !options.watch &&
-      options.onCompile
-    ) {
-      options.onCompile()
     }
   }
 
@@ -125,33 +169,50 @@ export default function compile(options: CompileOptions) {
       )
 
       if (error) {
-        console.info(failedMessage)
-        console.error(error)
+        if (!quiet) {
+          console.info(failedMessage)
+        }
+
+        if (!silent) {
+          console.info(error)
+        }
+
+        if (options.onCompile) {
+          options.onCompile(error)
+        }
+
         return
       }
 
-      console.info(failedMessage)
-      console.info(
-        stats.toString({
-          assets: options.verbose,
-          builtAt: options.verbose,
-          entrypoints: options.verbose,
-          timings: false,
-          cached: options.verbose,
-          cachedAssets: options.verbose,
-          chunks: options.verbose,
-          chunkModules: options.verbose,
-          colors: true,
-          hash: options.verbose,
-          modules: options.verbose,
-          reasons: options.dev,
-          version: options.verbose,
-        }),
-      )
+      if (!silent) {
+        console.info(failedMessage)
+        console.info(
+          stats.toString({
+            assets: options.verbose,
+            builtAt: options.verbose,
+            entrypoints: options.verbose,
+            timings: false,
+            cached: options.verbose,
+            cachedAssets: options.verbose,
+            chunks: options.verbose,
+            chunkModules: options.verbose,
+            colors: true,
+            hash: options.verbose,
+            modules: options.verbose,
+            reasons: options.dev,
+            version: options.verbose,
+          }),
+        )
+      }
+
+      if (options.onCompile) {
+        options.onCompile(stats.compilation.errors[0])
+      }
+
       return
     }
 
-    if (!options.watch) {
+    if (!options.watch || !options.checkTypes) {
       onFinish(
         stats.endTime && stats.startTime ? stats.endTime - stats.startTime : 0,
       )
@@ -159,11 +220,13 @@ export default function compile(options: CompileOptions) {
   }
 
   if (options.checkTypes) {
-    // @ts-ignore
-    compiler.hooks.forkTsCheckerDone.tap(
+    ;(compiler.hooks as any).forkTsCheckerDone.tap(
       'should',
       (_: any, __: any, elapsed: number) => {
-        clearConsole()
+        if (!quiet) {
+          clearConsole()
+        }
+
         setTimeout(() => onFinish(Math.round(elapsed / 1000000)), 1)
       },
     )

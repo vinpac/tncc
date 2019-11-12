@@ -3,21 +3,35 @@ import * as path from 'path'
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin'
 import * as webpack from 'webpack'
 import nodeExternals from 'webpack-node-externals'
-import { CompileOptions } from './compile'
+
+interface CreateWebpackConfigOptions {
+  dev: boolean
+  entry: string
+  outputDir: string
+  outputFile: string
+  checkTypes?: boolean
+  useExternals?: boolean
+  tsConfigPath: string
+}
 
 export default function createWebpackConfig(
-  options: CompileOptions,
+  {
+    outputDir,
+    outputFile,
+    useExternals = true,
+    dev,
+    entry,
+    checkTypes,
+    tsConfigPath,
+  }: CreateWebpackConfigOptions,
+  tsconfig: any,
 ): webpack.Configuration {
-  const isOutputADir = options.output.endsWith('/')
-  const outputDir = isOutputADir ? options.output : path.dirname(options.output)
-  const outputFile = isOutputADir ? 'index.js' : path.basename(options.output)
-
   return {
     target: 'node',
-    mode: options.dev ? 'development' : 'production',
-    devtool: options.dev ? 'cheap-module-eval-source-map' : 'source-map',
+    mode: dev ? 'development' : 'production',
+    devtool: dev ? 'cheap-module-eval-source-map' : 'source-map',
     context: path.resolve(),
-    entry: path.resolve(options.entry),
+    entry: path.resolve(entry),
     output: {
       path: outputDir,
       filename: outputFile,
@@ -35,32 +49,24 @@ export default function createWebpackConfig(
             silent: true,
             // disable type checker - we will use it in fork plugin
             transpileOnly: true,
-            configFile: path.resolve(options.configPath),
+            configFile: path.resolve(tsConfigPath),
           },
         },
       ],
     },
-    plugins: (options.checkTypes
-      ? ([new ForkTsCheckerWebpackPlugin()] as any[])
-      : []
-    ).concat([
-      // Adds a banner to the top of each generated chunk
-      // https://webpack.js.org/plugins/banner-plugin/
-      new webpack.BannerPlugin({
-        banner: 'require("source-map-support").install();',
-        raw: true,
-        entryOnly: false,
-      }),
-    ]),
+    plugins: checkTypes ? ([new ForkTsCheckerWebpackPlugin()] as any[]) : [],
     bail: true,
-    externals: [nodeExternals()],
+    externals: useExternals ? [nodeExternals()] : [],
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
-      plugins: [
-        new TsconfigPathsPlugin({
-          configFile: path.resolve(options.configPath),
-        }),
-      ],
+      plugins:
+        tsconfig && tsconfig.compilerOptions && tsconfig.compilerOptions.baseUrl
+          ? [
+              new TsconfigPathsPlugin({
+                configFile: path.resolve(tsConfigPath),
+              }),
+            ]
+          : undefined,
     },
   }
 }
