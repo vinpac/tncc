@@ -7,8 +7,11 @@ import compile, { CompileOptions } from './compile.js'
 let entry = ''
 const command = new commander.Command(pkg.name)
   .version(pkg.version)
-  .action((src: string) => {
-    entry = src
+  .arguments('<source-file>')
+  .action(sourceFile => {
+    if (typeof sourceFile === 'string') {
+      entry = sourceFile
+    }
   })
   .option('-o, --output <output-file>', 'output file path')
   .option('-p, --project <typescript-config-file>', 'tsconfig.json')
@@ -18,6 +21,7 @@ const command = new commander.Command(pkg.name)
   .option('-s, --silent', 'silent mode', false)
   .option('-c, --config <config-file>', 'configuration file', 'tncc.config.js')
   .option('--run', 'run compiled output', false)
+  .option('--run-args <args>', 'run process arguments', '')
   .option('-t, --type-check', 'enable type checking')
   .option('--release', 'build to production')
   .option('-e, --exec <exec-command>', 'exec when compiled')
@@ -43,9 +47,15 @@ const options: CompileOptions = {
   silent: Boolean(command.silent),
   watch: Boolean(command.watch),
   run: Boolean(command.run),
+  runArgs: command.runArgs ? command.runArgs.split(' ') : [],
   checkTypes: Boolean(command.typeCheck),
   tsConfigPath: command.project || path.resolve('tsconfig.json'),
   configPath: path.resolve(command.config || 'tncc.config.js'),
+}
+
+if (!options.entry) {
+  command.help()
+  process.exit(1)
 }
 
 compile({

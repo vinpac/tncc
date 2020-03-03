@@ -1,6 +1,6 @@
 {
   "name": "tncc",
-  "version": "0.3.0-beta.5",
+  "version": "0.3.0-beta.10",
   "main": "lib/index.js",
   "module": "es/index.js",
   "typings": "lib/index.d.ts",

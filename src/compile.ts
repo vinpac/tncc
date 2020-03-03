@@ -17,6 +17,7 @@ export interface CompileOptions {
   dev: boolean
   watch?: boolean
   run?: boolean | ((child: ChildProcess) => void)
+  runArgs: string[]
   checkTypes?: boolean
   quiet?: boolean
   silent?: boolean
@@ -38,9 +39,16 @@ export default function compile(options: CompileOptions) {
       `Unable to find a valid configuration JSON for typescript at '${options.tsConfigPath}'`,
     )
   }
-
   if (!options.entry) {
-    throw new Error("'entry' is a required parameter")
+    throw new Error(`'entry' parameter is required`)
+  }
+
+  if (typeof options.entry !== 'string') {
+    throw new Error(
+      `'entry' parameter must be of type string. ${JSON.stringify(
+        options.entry,
+      )} was given instead`,
+    )
   }
 
   const output = options.output
@@ -108,13 +116,17 @@ export default function compile(options: CompileOptions) {
 
     if (options.run || !options.output) {
       const isFn = typeof options.run === 'function'
-      const nodeChild = spawn('node', [path.join(outputDir!, outputFile)], {
-        env: Object.assign(
-          { NODE_ENV: options.dev ? 'development' : 'production' },
-          process.env,
-        ),
-        stdio: isFn ? undefined : silent ? 'ignore' : 'inherit',
-      })
+      const nodeChild = spawn(
+        'node',
+        [path.join(outputDir!, outputFile), ...options.runArgs],
+        {
+          env: Object.assign(
+            { NODE_ENV: options.dev ? 'development' : 'production' },
+            process.env,
+          ),
+          stdio: isFn ? undefined : silent ? 'ignore' : 'inherit',
+        },
+      )
       nodeChild.once('exit', () => {
         childProcesses = childProcesses.filter(
           childProcess => childProcess !== nodeChild,
