@@ -1,6 +1,6 @@
 {
   "name": "tncc",
-  "version": "0.3.0-beta.10",
+  "version": "0.3.0",
   "main": "lib/index.js",
   "module": "es/index.js",
   "typings": "lib/index.d.ts",
@@ -19,15 +19,15 @@
   "license": "MIT",
   "homepage": "https://github.com/vinpac/tncc#readme",
   "dependencies": {
-    "@babel/runtime": "^7.7.2",
+    "@babel/runtime": "^7.10.2",
     "clear-console": "^1.1.0",
     "fork-ts-checker-webpack-plugin": "^1.4.3",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^1.0.4",
     "nanoid": "^2.1.6",
     "tmp": "^0.1.0",
-    "ts-loader": "^6.0.4",
+    "ts-loader": "^7.0.5",
     "tsconfig-paths-webpack-plugin": "^3.2.0",
-    "webpack": "^4.39.1",
+    "webpack": "^4.43.0",
     "webpack-node-externals": "^1.7.2"
   },
   "repository": {
@@ -35,7 +35,7 @@
     "url": "https://github.com/vinpac/tncc.git"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --runInBand",
     "build:cjs": "rimraf lib && babel src --extensions '.ts' --extensions '.tsx' --ignore 'test' -d lib",
     "build:es": "rimraf es && cross-env ES_MODULES=true babel src --extensions '.ts' --extensions '.tsx' --ignore 'test' -d es",
     "build:typings": "tsc -p tsconfig.typings.json",
